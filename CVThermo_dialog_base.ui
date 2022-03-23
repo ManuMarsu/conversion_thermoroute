@@ -1,6 +1,6 @@
 <ui version="4.0" >
- <class>cvthermoDialogBase</class>
- <widget class="QDialog" name="cvthermoDialogBase" >
+ <class>CVThermoDialogBase</class>
+ <widget class="QDialog" name="CVThermoDialogBase" >
   <property name="geometry" >
    <rect>
     <x>0</x>
@@ -34,7 +34,7 @@
   <connection>
    <sender>button_box</sender>
    <signal>accepted()</signal>
-   <receiver>cvthermoDialogBase</receiver>
+   <receiver>CVThermoDialogBase</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="source_label" >
@@ -50,7 +50,7 @@
   <connection>
    <sender>button_box</sender>
    <signal>rejected()</signal>
-   <receiver>cvthermoDialogBase</receiver>
+   <receiver>CVThermoDialogBase</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="source_label" >

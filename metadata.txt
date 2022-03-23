@@ -6,6 +6,8 @@
 name=Conversion thermoroute
 qgisMinimumVersion=3.0
 description=Construit les segments de route décrits dans le fichier re0
+
+
 version=0.1
 author=Manuel Collongues
 email=manuel.collongues@cerema.fr

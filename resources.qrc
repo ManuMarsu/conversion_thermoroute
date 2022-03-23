@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/cv_thermo" >
+    <qresource prefix="/plugins/CVThermo" >
         <file>icon.png</file>
     </qresource>
 </RCC>

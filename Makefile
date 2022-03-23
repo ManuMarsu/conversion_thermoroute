@@ -1,7 +1,9 @@
 #/***************************************************************************
-# cvthermo
+# CVThermo
 #
 # Construit les segments de route décrits dans le fichier re0
+
+
 #							 -------------------
 #		begin				: 2022-03-23
 #		git sha				: $Format:%H$
@@ -38,15 +40,15 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	cv_thermo.py cv_thermo_dialog.py
+	CVThermo.py CVThermo_dialog.py
 
-PLUGINNAME = cv_thermo
+PLUGINNAME = CVThermo
 
 PY_FILES = \
 	__init__.py \
-	cv_thermo.py cv_thermo_dialog.py
+	CVThermo.py CVThermo_dialog.py
 
-UI_FILES = cv_thermo_dialog_base.ui
+UI_FILES = CVThermo_dialog_base.ui
 
 EXTRAS = metadata.txt icon.png
 

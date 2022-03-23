@@ -16,18 +16,18 @@ import unittest
 
 from qgis.PyQt.QtGui import QDialogButtonBox, QDialog
 
-from cv_thermo_dialog import cvthermoDialog
+from CVThermo_dialog import CVThermoDialog
 
 from utilities import get_qgis_app
 QGIS_APP = get_qgis_app()
 
 
-class cvthermoDialogTest(unittest.TestCase):
+class CVThermoDialogTest(unittest.TestCase):
     """Test dialog works."""
 
     def setUp(self):
         """Runs before each test."""
-        self.dialog = cvthermoDialog(None)
+        self.dialog = CVThermoDialog(None)
 
     def tearDown(self):
         """Runs after each test."""
@@ -49,7 +49,7 @@ class cvthermoDialogTest(unittest.TestCase):
         self.assertEqual(result, QDialog.Rejected)
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(cvthermoDialogTest)
+    suite = unittest.makeSuite(CVThermoDialogTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 

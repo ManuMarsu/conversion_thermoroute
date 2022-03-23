@@ -18,7 +18,7 @@ from qgis.PyQt.QtGui import QIcon
 
 
 
-class cvthermoDialogTest(unittest.TestCase):
+class CVThermoDialogTest(unittest.TestCase):
     """Test rerources work."""
 
     def setUp(self):
@@ -31,12 +31,12 @@ class cvthermoDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/cvthermo/icon.png'
+        path = ':/plugins/CVThermo/icon.png'
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(cvthermoResourcesTest)
+    suite = unittest.makeSuite(CVThermoResourcesTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 
