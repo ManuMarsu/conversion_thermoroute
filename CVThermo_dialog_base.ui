@@ -13,6 +13,13 @@
   <property name="windowTitle">
    <string>Conversion thermoroute</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon.png</normaloff>icon.png</iconset>
+  </property>
+  <property name="locale">
+   <locale language="French" country="France"/>
+  </property>
   <widget class="QDialogButtonBox" name="button_box">
    <property name="geometry">
     <rect>

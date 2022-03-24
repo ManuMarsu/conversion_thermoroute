@@ -15,6 +15,10 @@ class Ui_CVThermoDialogBase(object):
     def setupUi(self, CVThermoDialogBase):
         CVThermoDialogBase.setObjectName("CVThermoDialogBase")
         CVThermoDialogBase.resize(594, 170)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("c:\\Users\\manuel.collongues\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\default\\python\\plugins\\cvthermo\\icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        CVThermoDialogBase.setWindowIcon(icon)
+        CVThermoDialogBase.setLocale(QtCore.QLocale(QtCore.QLocale.French, QtCore.QLocale.France))
         self.button_box = QtWidgets.QDialogButtonBox(CVThermoDialogBase)
         self.button_box.setGeometry(QtCore.QRect(170, 100, 341, 32))
         self.button_box.setLocale(QtCore.QLocale(QtCore.QLocale.French, QtCore.QLocale.France))
