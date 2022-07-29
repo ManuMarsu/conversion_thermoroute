@@ -29,6 +29,11 @@ import os
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QVariant
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
+
+from qgis.core import QgsProject, QgsMapLayer, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY
+
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'CVThermo_dialog_base.ui'))
@@ -44,3 +49,45 @@ class CVThermoDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+        self.pushButton_convertir.clicked.connect(self.convertir)
+    
+    def convertir(self):
+        filename_re0, _filter = QFileDialog.getOpenFileName(self.dlg, "Selectionner fichier thermoroute", "", "(*.re0)")
+        self.dlg.line_fichier_re0.setText(filename_re0)
+        if not filename_re0 or filename_re0 == "":
+            return
+        
+        nom_court = filename_re0.split("/")[-1].split(".")[0]
+        
+
+        nouvellesEntites = []
+        with open(filename_re0, "r", encoding="utf-8") as f:
+            premiereLigne = True
+            ind = 0
+            for ligne in f:
+                if not premiereLigne:
+                    abd, xdeb, ydeb, zdeb, tsurf, tair, hair, vitesse, altitude, td, prt5 = ligne.split("\n")[0].split("\t")
+                    if ind > 0:
+                        if float(abd) - float(abd_prec) == 50:
+                            outFeature = QgsFeature()
+                            outFeature.setGeometry(QgsGeometry.fromPolylineXY([QgsPointXY(float(x_prec), float(y_prec)), QgsPointXY(float(xdeb), float(ydeb))]))
+                            outFeature.setAttributes([ind, int(float(abd_prec)), float(xdeb), float(ydeb), float(x_prec), float(y_prec), float(tsurf_prec), float(td_prec)])
+                            nouvellesEntites.append(outFeature)
+                    x_prec = xdeb
+                    y_prec = ydeb
+                    abd_prec = abd
+                    tsurf_prec = tsurf
+                    td_prec = td
+                    ind += 1
+                else:
+                    premiereLigne = False
+
+            vl = QgsVectorLayer("Linestring?crs=EPSG:2154", nom_court, "memory")
+            prov = vl.dataProvider()
+            prov.addAttributes([QgsField('id', QVariant.Int), QgsField('ABD', QVariant.Int), QgsField('XFIN', QVariant.Double), QgsField('YFIN', QVariant.Double), QgsField('XDEB', QVariant.Double), QgsField('YDEB', QVariant.Double), QgsField('TSurf', QVariant.Double), QgsField('TD', QVariant.Double)])
+            vl.updateFields()
+            prov.addFeatures(nouvellesEntites)
+            vl.updateExtents()
+            QgsProject.instance().addMapLayer(vl)
+        

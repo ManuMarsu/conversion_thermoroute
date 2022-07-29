@@ -23,11 +23,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QVariant
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
-
-from qgis.core import QgsProject, QgsMapLayer, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY
+from qgis.PyQt.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -183,46 +181,6 @@ class CVThermo:
                 action)
             self.iface.removeToolBarIcon(action)
 
-    def convertir(self):
-        filename_re0, _filter = QFileDialog.getOpenFileName(self.dlg, "Selectionner fichier thermoroute", "", "(*.re0)")
-        self.dlg.line_fichier_re0.setText(filename_re0)
-        if not filename_re0 or filename_re0 == "":
-            return
-        
-        nom_court = filename_re0.split("/")[-1].split(".")[0]
-        
-
-        nouvellesEntites = []
-        with open(filename_re0, "r", encoding="utf-8") as f:
-            premiereLigne = True
-            ind = 0
-            for ligne in f:
-                if not premiereLigne:
-                    abd, xdeb, ydeb, zdeb, tsurf, tair, hair, vitesse, altitude, td, prt5 = ligne.split("\n")[0].split("\t")
-                    if ind > 0:
-                        if float(abd) - float(abd_prec) == 50:
-                            outFeature = QgsFeature()
-                            outFeature.setGeometry(QgsGeometry.fromPolylineXY([QgsPointXY(float(x_prec), float(y_prec)), QgsPointXY(float(xdeb), float(ydeb))]))
-                            outFeature.setAttributes([ind, int(float(abd_prec)), float(xdeb), float(ydeb), float(x_prec), float(y_prec), float(tsurf_prec), float(td_prec)])
-                            nouvellesEntites.append(outFeature)
-                    x_prec = xdeb
-                    y_prec = ydeb
-                    abd_prec = abd
-                    tsurf_prec = tsurf
-                    td_prec = td
-                    ind += 1
-                else:
-                    premiereLigne = False
-
-            vl = QgsVectorLayer("Linestring?crs=EPSG:2154", nom_court, "memory")
-            prov = vl.dataProvider()
-            prov.addAttributes([QgsField('id', QVariant.Int), QgsField('ABD', QVariant.Int), QgsField('XFIN', QVariant.Double), QgsField('YFIN', QVariant.Double), QgsField('XDEB', QVariant.Double), QgsField('YDEB', QVariant.Double), QgsField('TSurf', QVariant.Double), QgsField('TD', QVariant.Double)])
-            vl.updateFields()
-            prov.addFeatures(nouvellesEntites)
-            vl.updateExtents()
-            QgsProject.instance().addMapLayer(vl)
-        
-
         #QMessageBox.warning(self.iface.mainWindow(), "Tout va bien", "Tout va bien")
 
     def run(self):
@@ -233,7 +191,6 @@ class CVThermo:
         if self.first_start == True:
             self.first_start = False
             self.dlg = CVThermoDialog()
-            self.dlg.pushButton_convertir.clicked.connect(self.convertir)
 
         # show the dialog
         self.dlg.show()
