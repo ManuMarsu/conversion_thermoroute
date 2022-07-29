@@ -32,7 +32,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QVariant
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
 
-from qgis.core import QgsProject, QgsMapLayer, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY
+from qgis.core import QgsMessageLog, Qgis, QgsProject, QgsMapLayer, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -50,19 +50,88 @@ class CVThermoDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-        self.pushButton_convertir.clicked.connect(self.convertir)
+        self.pushButton_convertir.clicked.connect(self.convertir_re0)
+        self.pb_charger_re1.clicked.connect(self.charger_re1)
+        self.pb_charger_csv.clicked.connect(self.charger_csv_zones_a_risque)
+        self.pb_zones_a_risque.clicked.connect(self.traitement_zones_a_risque)
     
-    def convertir(self):
-        filename_re0, _filter = QFileDialog.getOpenFileName(self.dlg, "Selectionner fichier thermoroute", "", "(*.re0)")
-        self.dlg.line_fichier_re0.setText(filename_re0)
-        if not filename_re0 or filename_re0 == "":
+    def charger_re1(self):
+        self.filename_re1, _filter = QFileDialog.getOpenFileName(self, "Selectionner fichier thermoroute", "", "(*.re1)")
+        self.line_fichier_re1.setText(self.filename_re1)
+        self.nom_court_re1 = self.filename_re1.split("/")[-1].split(".")[0]
+        if not self.filename_re1 or self.filename_re1 == "":
+            return
+        with open(self.filename_re1, "r", encoding="utf-8") as f:
+            self.points = []
+            premiereLigne = True
+            for ligne in f:
+                if not premiereLigne:
+                    abd, xdeb, ydeb, zdeb, tsurf, tair, hair, vitesse, altitude, td, prt5 = ligne.split("\n")[0].split("\t")
+                    point = {}
+                    point["geom"] = QgsPointXY(float(xdeb), float(ydeb))
+                    point["absc"] = int(float(abd))
+                    self.points.append(point)
+                else:
+                    premiereLigne = False
+
+    def charger_csv_zones_a_risque(self):
+        self.filename_csv, _filter = QFileDialog.getOpenFileName(self, "Selectionner fichier thermoroute", "", "(*.csv)")
+        self.line_fichier_risque.setText(self.filename_csv)
+        if not self.filename_csv or self.filename_csv == "":
+            return
+        with open(self.filename_csv, "r", encoding="ansi") as f:
+            self.sections = []
+            for ligne in f:
+                donnees = ligne.split("\n")[0].split(",")
+                if len(donnees) == 15:
+                    section = donnees[1]
+                    code_risque = donnees[14]
+                    debut_section = section.split(" ")[2]
+                    fin_section = section.split(" ")[4].split("m")[0]
+                    self.sections.append({"debut": int(float(debut_section)), "fin": int(float(fin_section)), "code_risque": int(float(code_risque))})
+                    QgsMessageLog.logMessage(f"Section de {debut_section} à {fin_section} m", "Thermoroute", level=Qgis.Info)
+
+    def traitement_zones_a_risque(self):
+        nouvellesEntites = []
+        for i, section in enumerate(self.sections):
+            list_vertex = []
+            for point in self.points:
+                if point["absc"] >= section['debut'] and point["absc"] <= section['fin']:
+                    list_vertex.append(point["geom"])
+            outFeature = QgsFeature()
+            outFeature.setGeometry(QgsGeometry.fromPolylineXY(list_vertex))
+            outFeature.setAttributes([i, section['debut'], section['fin'], section['code_risque']])
+            nouvellesEntites.append(outFeature)
+        
+        # Chargement dans une couche mémoire du canvas des polylignes correspondantes à chaque section
+        vrisque = QgsVectorLayer("Linestring?crs=EPSG:2154", self.nom_court_re1 + " - zones à risque", "memory")
+        prov = vrisque.dataProvider()
+        prov.addAttributes([QgsField('num_section', QVariant.Int), 
+                            QgsField('debut_section', QVariant.Int), 
+                            QgsField('fin_section', QVariant.Int), 
+                            QgsField('code_risque', QVariant.Int)])
+        vrisque.updateFields()
+        prov.addFeatures(nouvellesEntites)
+        vrisque.updateExtents()
+        QgsProject.instance().addMapLayer(vrisque)
+
+        vrisque.loadNamedStyle(os.path.dirname(__file__) + '/styles/zones_risque.qml')
+        vrisque.triggerRepaint()
+        QgsMessageLog.logMessage(f"Chemin du style : {os.path.join(os.path.dirname(__file__),'styles', 'zones_risque.qml')}", "Thermoroute", level=Qgis.Info)
+        
+
+
+    def convertir_re0(self):
+        self.filename_re0, _filter = QFileDialog.getOpenFileName(self, "Selectionner fichier thermoroute", "", "(*.re0)")
+        self.line_fichier_re0.setText(self.filename_re0)
+        if not self.filename_re0 or self.filename_re0 == "":
             return
         
-        nom_court = filename_re0.split("/")[-1].split(".")[0]
+        nom_court = self.filename_re0.split("/")[-1].split(".")[0]
         
 
         nouvellesEntites = []
-        with open(filename_re0, "r", encoding="utf-8") as f:
+        with open(self.filename_re0, "r", encoding="utf-8") as f:
             premiereLigne = True
             ind = 0
             for ligne in f:
