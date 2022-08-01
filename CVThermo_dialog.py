@@ -59,8 +59,7 @@ class CVThermoDialog(QtWidgets.QDialog, FORM_CLASS):
         self.filename_re1, _filter = QFileDialog.getOpenFileName(self, "Selectionner fichier thermoroute", "", "(*.re1)")
         self.line_fichier_re1.setText(self.filename_re1)
         self.nom_court_re1 = self.filename_re1.split("/")[-1].split(".")[0]
-        if not self.filename_re1 or self.filename_re1 == "":
-            return
+        QgsMessageLog.logMessage(f"Fichier {self.filename_re1} sélectionné", "Thermoroute", level=Qgis.Info)
         with open(self.filename_re1, "r", encoding="utf-8") as f:
             self.points = []
             premiereLigne = True
@@ -71,25 +70,29 @@ class CVThermoDialog(QtWidgets.QDialog, FORM_CLASS):
                     point["geom"] = QgsPointXY(float(xdeb), float(ydeb))
                     point["absc"] = int(float(abd))
                     self.points.append(point)
+                    #QgsMessageLog.logMessage(f"Point à l'abscisse {point['absc']} : coordonnées : {float(xdeb)}, {float(ydeb)}", "Thermoroute", level=Qgis.Info)
                 else:
                     premiereLigne = False
+            QgsMessageLog.logMessage(f"Lecture du fichier {self.filename_re1} terminée", "Thermoroute", level=Qgis.Info)
 
     def charger_csv_zones_a_risque(self):
         self.filename_csv, _filter = QFileDialog.getOpenFileName(self, "Selectionner fichier thermoroute", "", "(*.csv)")
         self.line_fichier_risque.setText(self.filename_csv)
         if not self.filename_csv or self.filename_csv == "":
             return
+        QgsMessageLog.logMessage(f"Fichier {self.filename_csv} sélectionné", "Thermoroute", level=Qgis.Info)
         with open(self.filename_csv, "r", encoding="ansi") as f:
             self.sections = []
             for ligne in f:
-                donnees = ligne.split("\n")[0].split(",")
+                donnees = ligne.split("\n")[0].split(";")
                 if len(donnees) == 15:
                     section = donnees[1]
                     code_risque = donnees[14]
                     debut_section = section.split(" ")[2]
                     fin_section = section.split(" ")[4].split("m")[0]
                     self.sections.append({"debut": int(float(debut_section)), "fin": int(float(fin_section)), "code_risque": int(float(code_risque))})
-                    QgsMessageLog.logMessage(f"Section de {debut_section} à {fin_section} m", "Thermoroute", level=Qgis.Info)
+                    QgsMessageLog.logMessage(f"Section de {debut_section} à {fin_section} m : code risque = {code_risque}", "Thermoroute_detail", level=Qgis.Info)
+            QgsMessageLog.logMessage(f"Lecture du fichier {self.filename_csv} terminée", "Thermoroute", level=Qgis.Info)
 
     def traitement_zones_a_risque(self):
         nouvellesEntites = []
@@ -102,6 +105,7 @@ class CVThermoDialog(QtWidgets.QDialog, FORM_CLASS):
             outFeature.setGeometry(QgsGeometry.fromPolylineXY(list_vertex))
             outFeature.setAttributes([i, section['debut'], section['fin'], section['code_risque']])
             nouvellesEntites.append(outFeature)
+        QgsMessageLog.logMessage(f"Regroupement des sections par zone de risque terminé", "Thermoroute", level=Qgis.Info)
         
         # Chargement dans une couche mémoire du canvas des polylignes correspondantes à chaque section
         vrisque = QgsVectorLayer("Linestring?crs=EPSG:2154", self.nom_court_re1 + " - zones à risque", "memory")
